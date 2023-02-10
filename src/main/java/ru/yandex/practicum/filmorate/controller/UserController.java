@@ -12,17 +12,20 @@ import java.util.List;
 @Slf4j
 public class UserController extends Controller<User> {
     @GetMapping("/users")
+    @Override
     public List<User> getAll() {
         return super.getAll();
     }
 
     @PostMapping("/users")
+    @Override
     public User create(@Valid @RequestBody User user) {
         log.info("Добавлен пользователь - {}", user);
         return super.create(user);
     }
 
     @PutMapping("/users")
+    @Override
     public User update(@Valid @RequestBody User user) {
         validate(user);
         if (storage.containsKey(user.getId())) {
@@ -35,6 +38,7 @@ public class UserController extends Controller<User> {
         return user;
     }
 
+    @Override
     public void validate(User user) {
         if (user.getLogin() == null || user.getBirthday() == null)
             throw new ValidationException("Ошибка валидации пользователя");

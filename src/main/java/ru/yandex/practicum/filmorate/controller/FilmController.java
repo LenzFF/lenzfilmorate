@@ -13,17 +13,20 @@ import java.util.List;
 public class FilmController extends Controller<Film> {
 
     @GetMapping("/films")
+    @Override
     public List<Film> getAll() {
         return super.getAll();
     }
 
     @PostMapping("/films")
-    public Film create(@RequestBody Film film) {
+    @Override
+    public Film create(@Valid @RequestBody Film film) {
         log.info("Добавлен фильм - {}", film);
         return super.create(film);
     }
 
     @PutMapping("/films")
+    @Override
     public Film update(@Valid @RequestBody Film film) {
         validate(film);
         if (storage.containsKey(film.getId())) {
@@ -36,6 +39,7 @@ public class FilmController extends Controller<Film> {
         return film;
     }
 
+    @Override
     public void validate(Film film) {
         if (film.getName() == null ||
                 film.getDescription() == null ||

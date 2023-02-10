@@ -23,11 +23,7 @@ public abstract class Controller<T extends Model> {
         return item;
     }
 
-    public T update(T item) {
-        validate(item);
-        return item;
-    }
+    public abstract T update(T item);
 
-    public void validate(T item) {
-    }
+    public abstract void validate(T item);
 }
