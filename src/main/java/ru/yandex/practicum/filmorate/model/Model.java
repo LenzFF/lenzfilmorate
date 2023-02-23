@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 public abstract class Model {
     @NonNull
-    private int id;
+    private long id;
 }

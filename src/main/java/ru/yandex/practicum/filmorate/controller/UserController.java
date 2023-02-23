@@ -1,57 +1,70 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
-@RestController
 @Slf4j
-public class UserController extends Controller<User> {
+@RestController
+@RequiredArgsConstructor
+public class UserController {
+    public final UserService userService;
+
     @GetMapping("/users")
-    @Override
     public List<User> getAll() {
-        return super.getAll();
+        List<User> users = userService.getAll();
+        log.info("Запрошен список всех пользователей");
+        return users;
+    }
+
+    @GetMapping("/users/{id}")
+    public User get(@PathVariable long id) {
+        return userService.get(id);
+    }
+
+    @GetMapping("/users/{id}/friends")
+    public List<User> getUserFriends(@PathVariable long id) {
+        List<User> friends = userService.getUsersFriends(id);
+        log.info("Запрошен список всех друзей пользователя - {}", id);
+        return friends;
+    }
+
+    @GetMapping("/users/{userId}/friends/common/{friendId}")
+    public List<User> getCommonFriends(@PathVariable long userId, @PathVariable long friendId) {
+        List<User> commonFriends = userService.getCommonFriends(userId, friendId);
+        log.info("Запрошен список общих друзей пользователей - {}, {}", userId, friendId);
+        return commonFriends;
     }
 
     @PostMapping("/users")
-    @Override
     public User create(@Valid @RequestBody User user) {
+        userService.create(user);
         log.info("Добавлен пользователь - {}", user);
-        return super.create(user);
-    }
-
-    @PutMapping("/users")
-    @Override
-    public User update(@Valid @RequestBody User user) {
-        validate(user);
-        if (storage.containsKey(user.getId())) {
-            storage.replace(user.getId(), user);
-            log.info("Пользователь обновлен - {}", user);
-        } else {
-            log.info("Пользователь для обновления не найдем - {}", user);
-            throw new ValidationException("Пользователь для обновления не найдем");
-        }
         return user;
     }
 
-    @Override
-    public void validate(User user) {
-        if (user.getLogin() == null || user.getBirthday() == null)
-            throw new ValidationException("Ошибка валидации пользователя");
+    @PutMapping("/users")
+    public User update(@Valid @RequestBody User user) {
+        userService.update(user);
+        log.info("Добавлен обновлен - {}", user);
+        return user;
+    }
 
-        if (user.getName() == null) user.setName(user.getLogin());
+    @PutMapping("/users/{userId}/friends/{friendId}")
+    public void makeFriends(@PathVariable long userId, @PathVariable long friendId) {
+        userService.makeFriends(userId, friendId);
+        log.info("Пользователи - {} и {} стали друзьями", userId, friendId);
+    }
 
-        if (!(user.getBirthday().isBefore(LocalDate.now()) &&
-                user.getEmail().contains("@") &&
-                !user.getEmail().isEmpty() &&
-                !user.getLogin().isEmpty() &&
-                !user.getLogin().contains(" "))) {
-            log.info("Ошибка валидации пользователя - {}", user);
-            throw new ValidationException("Ошибка валидации пользователя");
-        }
+    @DeleteMapping("/users/{userId}/friends/{friendId}")
+    public void removeFromFriends(@PathVariable long userId, @PathVariable long friendId) {
+        userService.removeFromFriends(userId, friendId);
+        log.info("Пользователи - {} и {} больше не друзья", userId, friendId);
     }
 }
