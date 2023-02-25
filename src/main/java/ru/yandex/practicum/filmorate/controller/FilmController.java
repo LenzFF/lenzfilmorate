@@ -1,57 +1,65 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.AbstractService;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
-@RestController
 @Slf4j
-public class FilmController extends Controller<Film> {
+@RestController
+@RequiredArgsConstructor
+public class FilmController {
+    private final FilmService filmService;
 
     @GetMapping("/films")
-    @Override
     public List<Film> getAll() {
-        return super.getAll();
+        List<Film> films = filmService.getAll();
+        log.info("Запрошен список всех фильмов");
+        return films;
     }
+
+    @GetMapping("/films/popular")
+    public List<Film> getTopLikedFilms(@RequestParam(defaultValue = "10") long count) {
+        List<Film> films = filmService.topLikedFilms(count);
+        log.info("Запрошен список лучших фильмов");
+        return films;
+    }
+
+    @GetMapping("/films/{filmId}")
+    public Film get(@PathVariable long filmId) {
+        return filmService.get(filmId);
+    }
+
 
     @PostMapping("/films")
-    @Override
     public Film create(@Valid @RequestBody Film film) {
+        filmService.create(film);
         log.info("Добавлен фильм - {}", film);
-        return super.create(film);
-    }
-
-    @PutMapping("/films")
-    @Override
-    public Film update(@Valid @RequestBody Film film) {
-        validate(film);
-        if (storage.containsKey(film.getId())) {
-            storage.replace(film.getId(), film);
-            log.info("Фильм обновлен - {}", film);
-        } else {
-            log.info("Фильм для обновления не найдем - {}", film);
-            throw new ValidationException("Фильм для обновления не найдем");
-        }
         return film;
     }
 
-    @Override
-    public void validate(Film film) {
-        if (film.getName() == null ||
-                film.getDescription() == null ||
-                film.getReleaseDate() == null)
-            throw new ValidationException("Ошибка валидации фильма");
+    @PutMapping("/films")
+    public Film update(@Valid @RequestBody Film film) {
+        filmService.update(film);
+        log.info("Обновлен фильм - {}", film);
+        return film;
+    }
 
-        if (!(film.getReleaseDate().isAfter(LocalDate.of(1895, 12, 27)) &&
-                !film.getName().isEmpty() &&
-                film.getDescription().length() <= 200 &&
-                film.getDuration() > 0)) {
-            log.info("Ошибка валидации фильма - {}", film);
-            throw new ValidationException("Ошибка валидации фильма");
-        }
+    @PutMapping("/films/{filmId}/like/{userId}")
+    public void addLike(@PathVariable long filmId, @PathVariable long userId) {
+        filmService.addLike(filmId, userId);
+        log.info("Фильму {} поставил лайк пользователь - {}", filmId, userId);
+    }
+
+    @DeleteMapping("/films/{filmId}/like/{userId}")
+    public void removeLike(@PathVariable long filmId, @PathVariable long userId) {
+        filmService.removeLike(filmId, userId);
+        log.info("Пользователь {} удалил лайк у фильма - {}", userId, filmId);
     }
 }
