@@ -2,4 +2,4 @@
 
 Съема БД
 
-![БД](bd-template.png)
+![БД](BD Template.png)
