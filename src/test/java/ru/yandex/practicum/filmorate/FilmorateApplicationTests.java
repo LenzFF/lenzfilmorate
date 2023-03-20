@@ -54,7 +54,6 @@ class FilmoRateApplicationTests {
 
     @Test
     public void findRatingById() {
-
         Optional<RatingMPA> ratingMPAOptional = ratingMpaDbStorage.getById(1);
 
         assertThat(ratingMPAOptional)
@@ -238,5 +237,4 @@ class FilmoRateApplicationTests {
         userDbStorage.deleteAll();
         filmStorage.deleteAll();
     }
-
 }
