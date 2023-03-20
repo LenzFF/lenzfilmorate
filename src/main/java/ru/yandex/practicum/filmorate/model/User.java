@@ -24,6 +24,12 @@ public class User extends Model{
     @NonNull
     @Email
     private String email;
-    private Set<Long> friends = new HashSet<>();
-    private Set<Long> likes = new HashSet<>();
+
+    public User(int id, String login, String name, String email, LocalDate birthday) {
+        this.setId(id);
+        this.setLogin(login);
+        this.setName(name);
+        this.setBirthday(birthday);
+        this.setEmail(email);
+    }
 }

@@ -46,6 +46,7 @@ public class UserController {
     public User create(@Valid @RequestBody User user) {
         userService.create(user);
         log.info("Добавлен пользователь - {}", user);
+        user.setId(userService.getLastId());
         return user;
     }
 

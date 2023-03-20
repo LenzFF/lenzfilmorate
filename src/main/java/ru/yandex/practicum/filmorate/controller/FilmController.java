@@ -3,9 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.AbstractService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
@@ -41,6 +39,7 @@ public class FilmController {
     public Film create(@Valid @RequestBody Film film) {
         filmService.create(film);
         log.info("Добавлен фильм - {}", film);
+        film.setId(filmService.getLastId());
         return film;
     }
 

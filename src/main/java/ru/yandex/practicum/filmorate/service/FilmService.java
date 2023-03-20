@@ -1,98 +1,99 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.dao.impl.FilmDbStorageImpl;
+import ru.yandex.practicum.filmorate.dao.impl.UserDbStorageImpl;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.time.LocalDate;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
 @Service
-public class FilmService extends AbstractService<Film>{
+public class FilmService {
 
-    Storage<User> userStorage;
-
-    public static Comparator<Film> FILM_COMPARATOR = Comparator.comparing(Film::getLikesCount).reversed();
+    @Qualifier("fIlmDbStorageImpl")
+    private FilmDbStorageImpl fIlmStorage;
+    @Qualifier("userDbStorageImpl")
+    private UserDbStorageImpl userStorage;
 
     @Autowired
-    public FilmService(Storage<Film> filmStorage, Storage<User> userStorage) {
-        this.storage = filmStorage;
-        this.userStorage =  userStorage;
+    public FilmService(FilmDbStorageImpl filmStorage, UserDbStorageImpl userStorage) {
+        this.fIlmStorage = filmStorage;
+        this.userStorage = userStorage;
     }
 
     private Film getFilmOrThrowException(long id) {
-        Film film = storage.getById(id);
-        if (film == null) {
+        Optional<Film> film = fIlmStorage.getById(id);
+        if (film.isEmpty()) {
             log.info("Фильм не найден - {}", id);
             throw new NotFoundException("Фильм не найден");
         }
-        return film;
+        return film.get();
+    }
+
+    private User getUserOfThrowException(long id) {
+        Optional<User> user = userStorage.getById(id);
+        if (user.isEmpty()) {
+            log.info("Пользователь не найден - {}", id);
+            throw new NotFoundException("Пользователь не найден");
+        }
+        return user.get();
+    }
+
+    public long getLastId() {
+        return fIlmStorage.getLastAddedFilm().getId();
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = getFilmOrThrowException(filmId);
-
-        if (userStorage.getById(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        film.getLikes().add(userId);
-        userStorage.getById(userId).getLikes().add(filmId);
+        getFilmOrThrowException(filmId);
+        getUserOfThrowException(userId);
+        fIlmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = getFilmOrThrowException(filmId);
-
-        if (userStorage.getById(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        film.getLikes().remove(userId);
-        userStorage.getById(userId).getLikes().remove(filmId);
+        getFilmOrThrowException(filmId);
+        getUserOfThrowException(userId);
+        fIlmStorage.removeLike(filmId, userId);
     }
 
-    @Override
-    public void create(Film data) {
-        validate(data);
-        super.create(data);
+    public void create(Film film) {
+        validate(film);
+        fIlmStorage.add(film);
     }
 
     public List<Film> topLikedFilms(Long max) {
-        return storage.getAll().stream()
-                .sorted(FILM_COMPARATOR)
-                .limit(max)
-                .collect(Collectors.toList());
+        return fIlmStorage.getTopLikedFilms(max).get();
     }
 
-    @Override
     public Film get(long id) {
-        Film film = getFilmOrThrowException(id);
-        return film;
+        return getFilmOrThrowException(id);
     }
 
-    @Override
-    public void update(Film data) {
-        getFilmOrThrowException(data.getId());
-        validate(data);
-        super.update(data);
+    public List<Film> getAll() {
+        return fIlmStorage.getAll().orElse(new ArrayList<>());
     }
 
-    @Override
+    public void update(Film film) {
+        getFilmOrThrowException(film.getId());
+        validate(film);
+        fIlmStorage.update(film);
+    }
+
     public void delete(long id) {
         getFilmOrThrowException(id);
-        super.delete(id);
+        fIlmStorage.deleteById(id);
     }
 
-    @Override
     protected void validate(Film film) {
         if (film.getName() == null ||
                 film.getDescription() == null ||

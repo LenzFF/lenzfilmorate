@@ -4,9 +4,7 @@ import lombok.*;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 @Getter
 @Setter
@@ -21,9 +19,15 @@ public class Film extends Model{
     private int duration;
     @Size(min = 1, max = 200)
     private String description;
-    private Set<Long> likes = new TreeSet<>();
+    private RatingMPA mpa;
+    private TreeSet<Genre> genres = new TreeSet<>();
 
-    public int getLikesCount() {
-        return likes.size();
+    public Film(String name, LocalDate releaseDate, int duration, String description, RatingMPA mpa) {
+        this.setName(name);
+        this.setReleaseDate(releaseDate);
+        this.setDuration(duration);
+        this.setMpa(mpa);
+        this.setDescription(description);
+
     }
 }
