@@ -34,8 +34,6 @@ class FilmoRateApplicationTests {
 
     @Test
     public void findGenreById() {
-
-
         Optional<Genre> genreOptional = genreDbStorage.getById(1);
 
         assertThat(genreOptional)
